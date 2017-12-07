@@ -7,9 +7,9 @@ import numpy as np
 
 """ Conditional Image Synthesis With Auxiliary Classifier GANs """
 
-save_dir = "samples/experiment2"
+save_dir = "samples/experiment1"
 tl.files.exists_or_mkdir(save_dir)
-checkpoint_dir = "checkpoint/experiment2"
+checkpoint_dir = "checkpoint/experiment1"
 tl.files.exists_or_mkdir(checkpoint_dir)
 save_dir_d = os.path.join(checkpoint_dir, 'd.npz')
 save_dir_g = os.path.join(checkpoint_dir, 'g.npz')
@@ -42,7 +42,7 @@ def main():
     # class loss
     ce_real = tl.cost.cross_entropy(d_real_class, t_class, name='d_real_class')
     ce_fake = tl.cost.cross_entropy(d_fake_class, t_class, name='d_fake_class')
-    q_loss = ce_real + ce_fake
+    # q_loss = ce_real + ce_fake
 
     # DC-GAN
     # d_loss1 = tl.cost.sigmoid_cross_entropy(d_real, tf.ones_like(d_real), name='d_real')
@@ -53,8 +53,8 @@ def main():
     d_loss2 = tl.cost.mean_squared_error(d_fake, tf.zeros_like(d_fake), is_mean=True, name='d_fake')
     g_loss1 = tl.cost.mean_squared_error(d_fake, tf.ones_like(d_fake), is_mean=True, name='g_fake')
 
-    d_loss = d_loss1 + d_loss2 + ce_real + ce_fake
-    g_loss = g_loss1 + ce_fake
+    d_loss = d_loss1 + d_loss2 + ce_real #+ ce_fake
+    g_loss = g_loss1 + ce_fake # ce_real
 
     lr = 0.0002
     lr_decay = 0.5
