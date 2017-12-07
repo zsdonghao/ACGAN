@@ -1,0 +1,16 @@
+docs/_build
+__pacache__
+tensorlayer/__pacache__
+tensorlayer/.DS_Store
+.DS_Store
+dist
+build/
+tensorlayer.egg-info
+data/.DS_Store
+*.png
+*.pyc
+*.gz
+.spyproject/
+checkpoint
+samples
+data
