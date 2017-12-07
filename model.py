@@ -23,8 +23,8 @@ def G(z, c, is_train=False, reuse=False, batch_size=64):                # ref: h
         n = DenseLayer(n, n_units=gf_dim*8*s8*s8, name='d1')
         n = ReshapeLayer(n, [-1, s8, s8, gf_dim*8], name='reshape')
         n = BatchNormLayer(n, act=lrelu, is_train=is_train, name='bn1')
-        print(n.outputs)
-        exit()
+        # print(n.outputs)
+        # exit()
 
         n = DeConv2d(n, gf_dim*2, (3, 3), out_size=(s4, s4), strides=(2, 2),
                 batch_size=batch_size, padding='SAME', name='de1')

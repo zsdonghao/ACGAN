@@ -5,9 +5,11 @@ import tensorlayer as tl
 import model, time, os
 import numpy as np
 
-save_dir = "samples/experiment"
+""" Conditional Image Synthesis With Auxiliary Classifier GANs """
+
+save_dir = "samples/experiment2"
 tl.files.exists_or_mkdir(save_dir)
-checkpoint_dir = "checkpoint/experiment"
+checkpoint_dir = "checkpoint/experiment2"
 tl.files.exists_or_mkdir(checkpoint_dir)
 save_dir_d = os.path.join(checkpoint_dir, 'd.npz')
 save_dir_g = os.path.join(checkpoint_dir, 'g.npz')
@@ -33,25 +35,25 @@ def main():
     # for testing
     net_g_test = model.G(t_z, t_class, is_train=False, reuse=True, batch_size=100)
 
-    # net_g.print_layers()
-    # net_d.print_layers()
+    # net_g.print_layers()          # show network info
+    # net_d.print_params(False)
     # exit()
 
-    # class
+    # class loss
     ce_real = tl.cost.cross_entropy(d_real_class, t_class, name='d_real_class')
     ce_fake = tl.cost.cross_entropy(d_fake_class, t_class, name='d_fake_class')
     q_loss = ce_real + ce_fake
 
     # DC-GAN
-    d_loss1 = tl.cost.sigmoid_cross_entropy(d_real, tf.ones_like(d_real), name='d_real')
-    d_loss2 = tl.cost.sigmoid_cross_entropy(d_fake, tf.zeros_like(d_fake), name='d_fake')
-    g_loss1 = tl.cost.sigmoid_cross_entropy(d_fake, tf.ones_like(d_fake), name='g_fake')
+    # d_loss1 = tl.cost.sigmoid_cross_entropy(d_real, tf.ones_like(d_real), name='d_real')
+    # d_loss2 = tl.cost.sigmoid_cross_entropy(d_fake, tf.zeros_like(d_fake), name='d_fake')
+    # g_loss1 = tl.cost.sigmoid_cross_entropy(d_fake, tf.ones_like(d_fake), name='g_fake')
     # LS-GAN
-    # d_loss1 = tl.cost.mean_squared_error(d_real, tf.ones_like(d_real), is_mean=True, name='d_real')
-    # d_loss2 = tl.cost.mean_squared_error(d_fake, tf.zeros_like(d_fake), is_mean=True, name='d_fake')
-    # g_loss1 = tl.cost.mean_squared_error(d_fake, tf.ones_like(d_fake), is_mean=True, name='g_fake')
+    d_loss1 = tl.cost.mean_squared_error(d_real, tf.ones_like(d_real), is_mean=True, name='d_real')
+    d_loss2 = tl.cost.mean_squared_error(d_fake, tf.zeros_like(d_fake), is_mean=True, name='d_fake')
+    g_loss1 = tl.cost.mean_squared_error(d_fake, tf.ones_like(d_fake), is_mean=True, name='g_fake')
 
-    d_loss = d_loss1 + d_loss2 + ce_real #- ce_fake
+    d_loss = d_loss1 + d_loss2 + ce_real + ce_fake
     g_loss = g_loss1 + ce_fake
 
     lr = 0.0002
@@ -71,7 +73,7 @@ def main():
     sess = tf.InteractiveSession()
     tl.layers.initialize_global_variables(sess)
 
-    # tl.files.load_and_assign_npz(sess, save_dir_d, net_d)
+    # tl.files.load_and_assign_npz(sess, save_dir_d, net_d)     # (optional) load trained model
     # tl.files.load_and_assign_npz(sess, save_dir_d, net_g)
 
     print_freq = 5
@@ -81,6 +83,17 @@ def main():
     # print(len(sample_c), sample_z.shape)
     # exit()
     for epoch in range(n_epoch):
+
+        if epoch !=0 and (epoch % decay_every == 0):
+            new_lr_decay = lr_decay ** (epoch // decay_every)
+            sess.run(tf.assign(lr_v, lr * new_lr_decay))
+            log = " ** new learning rate: %f" % (lr * new_lr_decay)
+            print(log)
+            # logging.debug(log)
+        elif epoch == 0:
+            log = " ** init lr: %f  decay_every_epoch: %d, lr_decay: %f" % (lr, decay_every, lr_decay)
+            print(log)
+
         epoch_time = time.time()
         step, total_D, total_G = 0, 0, 0
         for b_x, b_y in tl.iterate.minibatches(X_train, y_train, batch_size, shuffle=True):
